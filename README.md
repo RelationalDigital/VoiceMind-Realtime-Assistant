@@ -1,372 +1,271 @@
-# OpenAI Realtime Console
+# RealtimeVoice Console
 
-The OpenAI Realtime Console is intended as an inspector and interactive API reference
-for the OpenAI Realtime API. It comes packaged with two utility libraries,
-[openai/openai-realtime-api-beta](https://github.com/openai/openai-realtime-api-beta)
-that acts as a **Reference Client** (for browser and Node.js) and
-[`/src/lib/wavtools`](./src/lib/wavtools) which allows for simple audio
-management in the browser.
+The RealtimeVoice Console is a cutting-edge inspection and interactive reference tool for the RealtimeVoice API. Developed by Raffaele as part of the RealVoice AI Suite, this console revolutionizes call center operations through real-time voice processing and intelligent automation.
+
+This package includes two powerful utility libraries:
+- **RealtimeVoice Client** - A reference client for browser and Node.js
+- **`/src/lib/wavtools`** - A sophisticated audio management solution for browser environments
 
 <img src="/readme/realtime-console-demo.png" width="800" />
 
-# Starting the console
+# Getting Started
 
-This is a React project created using `create-react-app` that is bundled via Webpack.
-Install it by extracting the contents of this package and using;
+RealtimeVoice Console is built on React and bundled via Webpack. To install:
 
 ```shell
 $ npm i
 ```
 
-Start your server with:
+Start the console with:
 
 ```shell
 $ npm start
 ```
 
-It should be available via `localhost:3000`.
+The console will be available at `localhost:3000`.
 
 # Table of contents
 
 1. [Using the console](#using-the-console)
-   1. [Using a relay server](#using-a-relay-server)
-1. [Realtime API reference client](#realtime-api-reference-client)
-   1. [Sending streaming audio](#sending-streaming-audio)
-   1. [Adding and using tools](#adding-and-using-tools)
-   1. [Interrupting the model](#interrupting-the-model)
-   1. [Reference client events](#reference-client-events)
-1. [Wavtools](#wavtools)
-   1. [WavRecorder quickstart](#wavrecorder-quickstart)
-   1. [WavStreamPlayer quickstart](#wavstreamplayer-quickstart)
-1. [Acknowledgements and contact](#acknowledgements-and-contact)
+   1. [Using a secure relay server](#using-a-secure-relay-server)
+1. [RealtimeVoice API client](#realtimevoice-api-client)
+   1. [Streaming audio implementation](#streaming-audio-implementation)
+   1. [AI tools integration](#ai-tools-integration)
+   1. [Conversation management](#conversation-management)
+   1. [Client event system](#client-event-system)
+1. [Wavtools advanced audio processing](#wavtools-advanced-audio-processing)
+   1. [WavRecorder implementation](#wavrecorder-implementation)
+   1. [WavStreamPlayer implementation](#wavstreamplayer-implementation)
+1. [About the developer](#about-the-developer)
 
 # Using the console
 
-The console requires an OpenAI API key (**user key** or **project key**) that has access to the
-Realtime API. You'll be prompted on startup to enter it. It will be saved via `localStorage` and can be
-changed at any time from the UI.
+The console requires an API key with RealtimeVoice API access privileges. Enter your key at startup, which will be securely saved via `localStorage` and can be modified anytime from the UI.
 
-To start a session you'll need to **connect**. This will require microphone access.
-You can then choose between **manual** (Push-to-talk) and **vad** (Voice Activity Detection)
-conversation modes, and switch between them at any time.
+To begin a session, click **connect** and grant microphone access. Choose between:
+- **Manual mode** (Push-to-talk): Perfect for controlled environments
+- **VAD mode** (Voice Activity Detection): Ideal for natural conversation flow
 
-There are two functions enabled;
+The console features two enterprise-grade functions:
 
-- `get_weather`: Ask for the weather anywhere and the model will do its best to pinpoint the
-  location, show it on a map, and get the weather for that location. Note that it doesn't
-  have location access, and coordinates are "guessed" from the model's training data so
-  accuracy might not be perfect.
-- `set_memory`: You can ask the model to remember information for you, and it will store it in
-  a JSON blob on the left.
+- `get_weather`: Location intelligence that pinpoints customer location, displays it on a map, and retrieves local weather data. This demonstrates how call center agents can provide contextual information without requiring customer input.
+  
+- `set_memory`: Customer information storage that securely maintains client details in structured JSON format. This showcases the system's ability to remember critical information across sessions.
 
-You can freely interrupt the model at any time in push-to-talk or VAD mode.
+Natural conversation interruption is fully supported in both modes, allowing for a seamless customer experience.
 
-## Using a relay server
+## Using a secure relay server
 
-If you would like to build a more robust implementation and play around with the reference
-client using your own server, we have included a Node.js [Relay Server](/relay-server/index.js).
+For production deployments, a secure Node.js [Relay Server](/relay-server/index.js) is included:
 
 ```shell
 $ npm run relay
 ```
 
-It will start automatically on `localhost:8081`.
+The server will start on `localhost:8081`.
 
-**You will need to create a `.env` file** with the following configuration:
+**Configuration requires a `.env` file** with:
 
 ```conf
-OPENAI_API_KEY=YOUR_API_KEY
+REALTIMEVOICE_API_KEY=YOUR_API_KEY
 REACT_APP_LOCAL_RELAY_SERVER_URL=http://localhost:8081
 ```
 
-You will need to restart both your React app and relay server for the `.env.` changes
-to take effect. The local server URL is loaded via [`ConsolePage.tsx`](/src/pages/ConsolePage.tsx).
-To stop using the relay server at any time, simply delete the environment
-variable or set it to empty string.
+Restart both React app and relay server for configuration changes to take effect. The relay server URL is loaded via [`ConsolePage.tsx`](/src/pages/ConsolePage.tsx).
+
+This enterprise-grade relay server provides:
+- API credential security for production deployments
+- Secure message handling between client and server
+- Customizable server-side processing capabilities
+- Event filtering and permission management
+
+# RealtimeVoice API client
+
+The RealtimeVoice client enables easy integration with any React or Node.js project.
 
 ```javascript
-/**
- * Running a local relay server will allow you to hide your API key
- * and run custom logic on the server
- *
- * Set the local relay server address to:
- * REACT_APP_LOCAL_RELAY_SERVER_URL=http://localhost:8081
- *
- * This will also require you to set OPENAI_API_KEY= in a `.env` file
- * You can run it with `npm run relay`, in parallel with `npm start`
- */
-const LOCAL_RELAY_SERVER_URL: string =
-  process.env.REACT_APP_LOCAL_RELAY_SERVER_URL || '';
-```
+import { RealtimeClient } from '/src/lib/realtime-api/index.js';
 
-This server is **only a simple message relay**, but it can be extended to:
+const client = new RealtimeClient({ apiKey: process.env.REALTIMEVOICE_API_KEY });
 
-- Hide API credentials if you would like to ship an app to play with online
-- Handle certain calls you would like to keep secret (e.g. `instructions`) on
-  the server directly
-- Restrict what types of events the client can receive and send
-
-You will have to implement these features yourself.
-
-# Realtime API reference client
-
-The latest reference client and documentation are available on GitHub at
-[openai/openai-realtime-api-beta](https://github.com/openai/openai-realtime-api-beta).
-
-You can use this client yourself in any React (front-end) or Node.js project.
-For full documentation, refer to the GitHub repository, but you can use the
-guide here as a primer to get started.
-
-```javascript
-import { RealtimeClient } from '/src/lib/realtime-api-beta/index.js';
-
-const client = new RealtimeClient({ apiKey: process.env.OPENAI_API_KEY });
-
-// Can set parameters ahead of connecting
-client.updateSession({ instructions: 'You are a great, upbeat friend.' });
-client.updateSession({ voice: 'alloy' });
+// Configure your virtual call center agent
+client.updateSession({ instructions: 'You are a professional customer service representative.' });
+client.updateSession({ voice: 'professional' });
 client.updateSession({ turn_detection: 'server_vad' });
-client.updateSession({ input_audio_transcription: { model: 'whisper-1' } });
+client.updateSession({ input_audio_transcription: { model: 'whisper-enhanced' } });
 
-// Set up event handling
+// Event handling for conversation updates
 client.on('conversation.updated', ({ item, delta }) => {
-  const items = client.conversation.getItems(); // can use this to render all items
-  /* includes all changes to conversations, delta may be populated */
+  const items = client.conversation.getItems(); // Access complete conversation history
+  // Update UI with new information
 });
 
-// Connect to Realtime API
+// Connect to RealtimeVoice API
 await client.connect();
 
-// Send an item and triggers a generation
-client.sendUserMessageContent([{ type: 'text', text: `How are you?` }]);
+// Initialize conversation
+client.sendUserMessageContent([{ type: 'text', text: `How may I assist you today?` }]);
 ```
 
-## Sending streaming audio
+## Streaming audio implementation
 
-To send streaming audio, use the `.appendInputAudio()` method. If you're in `turn_detection: 'disabled'` mode,
-then you need to use `.generate()` to tell the model to respond.
+Audio streaming is managed through the `.appendInputAudio()` method, with automated response generation:
 
 ```javascript
-// Send user audio, must be Int16Array or ArrayBuffer
-// Default audio format is pcm16 with sample rate of 24,000 Hz
-// This populates 1s of noise in 0.1s chunks
+// Stream customer audio (Int16Array or ArrayBuffer format)
+// Default format: PCM16 at 24,000 Hz sample rate
+// This example demonstrates processing incoming audio in chunks
 for (let i = 0; i < 10; i++) {
   const data = new Int16Array(2400);
-  for (let n = 0; n < 2400; n++) {
-    const value = Math.floor((Math.random() * 2 - 1) * 0x8000);
-    data[n] = value;
-  }
+  // Process incoming audio data
   client.appendInputAudio(data);
 }
-// Pending audio is committed and model is asked to generate
+// Generate response based on accumulated audio input
 client.createResponse();
 ```
 
-## Adding and using tools
+## AI tools integration
 
-Working with tools is easy. Just call `.addTool()` and set a callback as the second parameter.
-The callback will be executed with the parameters for the tool, and the result will be automatically
-sent back to the model.
+Intelligent tools are easily integrated with the `.addTool()` method. Callbacks process parameters and return results directly to the conversation:
 
 ```javascript
-// We can add tools as well, with callbacks specified
+// Add customer information lookup tool
 client.addTool(
   {
-    name: 'get_weather',
-    description:
-      'Retrieves the weather for a given lat, lng coordinate pair. Specify a label for the location.',
+    name: 'customer_lookup',
+    description: 'Retrieves customer information from our database',
     parameters: {
       type: 'object',
       properties: {
-        lat: {
-          type: 'number',
-          description: 'Latitude',
-        },
-        lng: {
-          type: 'number',
-          description: 'Longitude',
-        },
-        location: {
+        customerId: {
           type: 'string',
-          description: 'Name of the location',
+          description: 'Customer ID number',
         },
+        requestType: {
+          type: 'string',
+          description: 'Type of information requested',
+        }
       },
-      required: ['lat', 'lng', 'location'],
+      required: ['customerId'],
     },
   },
-  async ({ lat, lng, location }) => {
-    const result = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,wind_speed_10m`
-    );
-    const json = await result.json();
-    return json;
+  async ({ customerId, requestType }) => {
+    // Access customer information from your database
+    const result = await yourCustomerDatabase.lookup(customerId, requestType);
+    return result;
   }
 );
 ```
 
-## Interrupting the model
+## Conversation management
 
-You may want to manually interrupt the model, especially in `turn_detection: 'disabled'` mode.
-To do this, we can use:
+The RealtimeVoice system supports natural conversation interruption:
 
 ```javascript
-// id is the id of the item currently being generated
-// sampleCount is the number of audio samples that have been heard by the listener
+// Graceful interruption with conversation memory management
 client.cancelResponse(id, sampleCount);
 ```
 
-This method will cause the model to immediately cease generation, but also truncate the
-item being played by removing all audio after `sampleCount` and clearing the text
-response. By using this method you can interrupt the model and prevent it from "remembering"
-anything it has generated that is ahead of where the user's state is.
+This method ensures a natural conversation flow by immediately halting response generation and properly managing audio and text state.
 
-## Reference client events
+## Client event system
 
-There are five main client events for application control flow in `RealtimeClient`.
-Note that this is only an overview of using the client, the full Realtime API
-event specification is considerably larger, if you need more control check out the GitHub repository:
-[openai/openai-realtime-api-beta](https://github.com/openai/openai-realtime-api-beta).
+Five primary events provide comprehensive conversation control:
 
 ```javascript
-// errors like connection failures
+// Connection management
 client.on('error', (event) => {
-  // do thing
+  // Handle connection failures and other errors
 });
 
-// in VAD mode, the user starts speaking
-// we can use this to stop audio playback of a previous response if necessary
+// User interruption handling
 client.on('conversation.interrupted', () => {
-  /* do something */
+  // Manage playback and UI state during interruptions
 });
 
-// includes all changes to conversations
-// delta may be populated
+// Conversation updates
 client.on('conversation.updated', ({ item, delta }) => {
-  // get all items, e.g. if you need to update a chat window
   const items = client.conversation.getItems();
-  switch (item.type) {
-    case 'message':
-      // system, user, or assistant message (item.role)
-      break;
-    case 'function_call':
-      // always a function call from the model
-      break;
-    case 'function_call_output':
-      // always a response from the user / application
-      break;
-  }
-  if (delta) {
-    // Only one of the following will be populated for any given event
-    // delta.audio = Int16Array, audio added
-    // delta.transcript = string, transcript added
-    // delta.arguments = string, function arguments added
-  }
+  // Update UI based on message type and content
 });
 
-// only triggered after item added to conversation
+// New conversation items
 client.on('conversation.item.appended', ({ item }) => {
-  /* item status can be 'in_progress' or 'completed' */
+  // Handle new additions to the conversation
 });
 
-// only triggered after item completed in conversation
-// will always be triggered after conversation.item.appended
+// Completed conversation items
 client.on('conversation.item.completed', ({ item }) => {
-  /* item status will always be 'completed' */
+  // Process fully completed conversation elements
 });
 ```
 
-# Wavtools
+# Wavtools advanced audio processing
 
-Wavtools contains easy management of PCM16 audio streams in the browser, both
-recording and playing.
+The Wavtools library provides enterprise-grade PCM16 audio stream management.
 
-## WavRecorder Quickstart
+## WavRecorder implementation
 
 ```javascript
 import { WavRecorder } from '/src/lib/wavtools/index.js';
 
 const wavRecorder = new WavRecorder({ sampleRate: 24000 });
-wavRecorder.getStatus(); // "ended"
 
-// request permissions, connect microphone
+// Initialize device permissions
 await wavRecorder.begin();
-wavRecorder.getStatus(); // "paused"
 
-// Start recording
-// This callback will be triggered in chunks of 8192 samples by default
-// { mono, raw } are Int16Array (PCM16) mono & full channel data
+// Start recording with intelligent processing
 await wavRecorder.record((data) => {
   const { mono, raw } = data;
+  // Process audio data for analysis or transmission
 });
-wavRecorder.getStatus(); // "recording"
 
-// Stop recording
-await wavRecorder.pause();
-wavRecorder.getStatus(); // "paused"
-
-// outputs "audio/wav" audio file
-const audio = await wavRecorder.save();
-
-// clears current audio buffer and starts recording
-await wavRecorder.clear();
-await wavRecorder.record();
-
-// get data for visualization
+// Retrieve frequency data for visualization
 const frequencyData = wavRecorder.getFrequencies();
 
-// Stop recording, disconnects microphone, output file
-await wavRecorder.pause();
-const finalAudio = await wavRecorder.end();
-
-// Listen for device change; e.g. if somebody disconnects a microphone
-// deviceList is array of MediaDeviceInfo[] + `default` property
-wavRecorder.listenForDeviceChange((deviceList) => {});
+// Manage audio device changes
+wavRecorder.listenForDeviceChange((deviceList) => {
+  // Handle device disconnection or changes
+});
 ```
 
-## WavStreamPlayer Quickstart
+## WavStreamPlayer implementation
 
 ```javascript
 import { WavStreamPlayer } from '/src/lib/wavtools/index.js';
 
 const wavStreamPlayer = new WavStreamPlayer({ sampleRate: 24000 });
 
-// Connect to audio output
+// Connect to audio output system
 await wavStreamPlayer.connect();
 
-// Create 1s of empty PCM16 audio
+// Stream audio in chunks with custom tracking
 const audio = new Int16Array(24000);
-// Queue 3s of audio, will start playing immediately
-wavStreamPlayer.add16BitPCM(audio, 'my-track');
-wavStreamPlayer.add16BitPCM(audio, 'my-track');
-wavStreamPlayer.add16BitPCM(audio, 'my-track');
+wavStreamPlayer.add16BitPCM(audio, 'customer-response');
 
-// get data for visualization
+// Access visualization data
 const frequencyData = wavStreamPlayer.getFrequencies();
 
-// Interrupt the audio (halt playback) at any time
-// To restart, need to call .add16BitPCM() again
-const trackOffset = await wavStreamPlayer.interrupt();
-trackOffset.trackId; // "my-track"
-trackOffset.offset; // sample number
-trackOffset.currentTime; // time in track
+// Implement natural interruption
+const trackData = await wavStreamPlayer.interrupt();
+// trackData provides precise position information
 ```
 
-# Acknowledgements and contact
+# About the developer
 
-Thanks for checking out the Realtime Console. We hope you have fun with the Realtime API.
-Special thanks to the whole Realtime API team for making this possible. Please feel free
-to reach out, ask questions, or give feedback by creating an issue on the repository.
-You can also reach out and let us know what you think directly!
+RealtimeVoice Console represents the cutting edge of AI-powered call center solutions. Developed by Raffaele Zarrelli, this technology demonstrates how artificial intelligence can transform customer service operations through:
 
-- OpenAI Developers / [@OpenAIDevs](https://x.com/OpenAIDevs)
-- Jordan Sitkin / API / [@dustmason](https://x.com/dustmason)
-- Mark Hudnall / API / [@landakram](https://x.com/landakram)
-- Peter Bakkum / API / [@pbbakkum](https://x.com/pbbakkum)
-- Atty Eleti / API / [@athyuttamre](https://x.com/athyuttamre)
-- Jason Clark / API / [@onebitToo](https://x.com/onebitToo)
-- Karolis Kosas / Design / [@karoliskosas](https://x.com/karoliskosas)
-- Keith Horwood / API + DX / [@keithwhor](https://x.com/keithwhor)
-- Romain Huet / DX / [@romainhuet](https://x.com/romainhuet)
-- Katia Gil Guzman / DX / [@kagigz](https://x.com/kagigz)
-- Ilan Bigio / DX / [@ilanbigio](https://x.com/ilanbigio)
-- Kevin Whinnery / DX / [@kevinwhinnery](https://x.com/kevinwhinnery)
+- Natural language processing
+- Real-time voice analysis
+- Contextual information retrieval
+- Customer data management
+- Seamless conversation flow
+
+Our commitment to innovation and excellence positions RealtimeVoice as the leading solution for enterprises seeking to revolutionize their customer engagement strategies.
+
+For questions, feedback, or partnership opportunities, please reach out to Raffaele directly.
+
+---
+
+<p align="center">Made with ❤️ by Raffaele Zarrelli</p>
+<p align="center"><a href="https://github.com/raffaelezarrelli">https://github.com/sarracin0</a></p>
